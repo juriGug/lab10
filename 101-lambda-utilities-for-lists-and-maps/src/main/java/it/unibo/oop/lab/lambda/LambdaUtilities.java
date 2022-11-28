@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -61,7 +62,15 @@ public final class LambdaUtilities {
         /*
          * Suggestion: consider Optional.filter
          */
-        return null;
+        
+        final List<Optional<T>> list2 = new ArrayList<>();
+        list.forEach( t -> { 
+            if( pre.test(t))
+                list2.add(Optional.of(t) );
+            else
+                list2.add(Optional.empty());
+        });
+        return list2;
     }
 
     /**
@@ -80,7 +89,20 @@ public final class LambdaUtilities {
         /*
          * Suggestion: consider Map.merge
          */
-        return null;
+        final Map<R, Set<T>> mappa = new HashMap<R,Set<T>>();
+        list.forEach( t -> {
+            if ( mappa.containsKey(op.apply(t))){
+                final var set = mappa.get(op.apply(t));
+                set.add(t);
+                mappa.put(op.apply(t), set);
+            }
+            else {
+                final Set<T> set = new TreeSet<>();
+                set.add(t);
+                mappa.put(op.apply(t), set);
+            }
+        });
+        return mappa;
     }
 
     /**
@@ -101,7 +123,11 @@ public final class LambdaUtilities {
          *
          * Keep in mind that a map can be iterated through its forEach method
          */
-        return null;
+        final Map<K, V> mappa = new HashMap<>();
+        map.forEach(( k, v ) -> { 
+            mappa.put( k, v.orElseGet(def));
+        });
+        return mappa;
     }
 
     /**
