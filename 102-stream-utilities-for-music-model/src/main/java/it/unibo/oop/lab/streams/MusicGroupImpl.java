@@ -1,5 +1,6 @@
 package it.unibo.oop.lab.streams;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,34 +42,46 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Stream<String> albumInYear(final int year) {
-        return albums.values().stream().map(i -> i.toString());
+        return albums.entrySet().stream().filter(i -> i.getValue() == year).map(i -> i.getKey());
     }
 
     @Override
     public int countSongs(final String albumName) {
-        return (int)songs.stream().map(i -> i.getAlbumName().equals(albumName)).count();
+        return (int)songs.stream().filter(i -> i.getAlbumName().isPresent()).filter(i-> i.getAlbumName().get().equals(albumName)).count();
     }
 
     @Override
     public int countSongsInNoAlbum() {
-        return songs.size() - (int)songs.stream().map(i -> i.getAlbumName().isPresent()).count();
+        return songs.size() - (int)songs.stream().filter(i -> i.getAlbumName().isPresent()).count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
-        return songs.stream().mapToDouble( i -> i.getDuration()).average();
+        return songs.stream().filter(i-> i.getAlbumName().isPresent())
+            .filter(i-> i.getAlbumName().get().equals(albumName))
+            .mapToDouble( i -> i.getDuration()).average();
     }
 
     @Override
     public Optional<String> longestSong() {
-        return null;
+        return songs.stream().max(Comparator.comparingDouble(Song::getDuration)).map(i -> i.getSongName());
     }
 
     @Override
     public Optional<String> longestAlbum() {
-        return null;
+        return Optional.of(
+            albums.keySet().stream()
+            .max((x,y) -> Double.compare(getAlbumLength(x), getAlbumLength(y)))
+            .get()
+        );
     }
 
+    public Double getAlbumLength(final String s) {
+        return (Double)songs.stream().filter(i-> i.getAlbumName().isPresent())
+        .filter(i-> i.getAlbumName().get().equals(s))
+        .mapToDouble(x -> x.getDuration())
+        .reduce((a,b) -> a + b).orElse(0);
+    }
     private static final class Song {
 
         private final String songName;
