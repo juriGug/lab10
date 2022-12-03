@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import javax.swing.BorderFactory;
@@ -38,7 +39,18 @@ public final class LambdaFilter extends JFrame {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+        TO_LOWER("lowercase", String:: toLowerCase),
+        COUNT_CHARS("count chars", s -> Integer.toString(s.length())),
+        COUNT_LINES("number of lines", s -> Integer.toString(s.split("\n").length)),
+        WORDS_ALPHABETICAL("words in alphabetical order", s -> 
+            Arrays.stream(s.split(" ")).sorted().reduce((i, j) -> i.concat(" " + j)).get()
+        ),
+        WORD_COUNT("word count", s ->
+            Arrays.stream(s.replaceAll("\n", " ").split(" "))
+            .map(x -> x.concat(" -> "+ Arrays.stream(s.replaceAll("\n", " ").split(" ")).filter(y -> x.equals(y)).count()))
+            .distinct().reduce((i,j) -> i.concat(" " + j)).get()
+        );
 
         private final String commandName;
         private final Function<String, String> fun;
@@ -48,7 +60,7 @@ public final class LambdaFilter extends JFrame {
             fun = process;
         }
 
-        @Override
+        @Override 
         public String toString() {
             return commandName;
         }
